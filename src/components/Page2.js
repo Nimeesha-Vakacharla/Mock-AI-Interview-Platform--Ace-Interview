@@ -6,7 +6,7 @@ import { FaSpinner } from 'react-icons/fa';
 const API_BASE =
   (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE) ||
   (typeof window !== 'undefined' && window.__API_BASE__) ||
-  'http://127.0.0.1:7860';
+  'https://sindhupandrangi-mock-interview-backend.hf.space';
 
 function Page2({
   questions,
