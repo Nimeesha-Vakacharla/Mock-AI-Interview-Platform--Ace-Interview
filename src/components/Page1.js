@@ -2,10 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_BASE =
-  (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE) ||
-  (typeof window !== 'undefined' && window.__API_BASE__) ||
+const API_BASE_TECH =
+  (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE_TECH) ||
+  (typeof window !== 'undefined' && window.__API_BASE_TECH__) ||
   'https://sindhupandrangi-mock-interview-backend.hf.space';
+
+const API_BASE_MODES =
+  (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE_MODES) ||
+  (typeof window !== 'undefined' && window.__API_BASE_MODES__) ||
+  'https://sindhupandrangi-mock-interview-backend-modes.hf.space';
 
 function Page1({
   resumeFile,
@@ -32,6 +37,9 @@ function Page1({
   const params = new URLSearchParams(window.location.search || '');
   const selectedCompany = params.get('company') || '';
   const selectedLevel = params.get('level') || '';
+
+  const selectedType = (interviewType || 'Technical').toLowerCase();
+  const isTechnical = selectedType === 'technical' || selectedType === 'all';
 
   useEffect(() => {
     setDomain && setDomain('');
@@ -65,7 +73,7 @@ function Page1({
       setIsParsing(true);
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch(`${API_BASE}/parse_resume`, { method: 'POST', body: fd });
+      const res = await fetch(`${API_BASE_TECH}/parse_resume`, { method: 'POST', body: fd });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
 
@@ -88,7 +96,7 @@ function Page1({
   };
 
   const handleNext = () => {
-    if (currentStep === 0 && !domain) {
+    if (currentStep === 0 && isTechnical && !domain) {
       setError('Please select a domain');
       return;
     }
@@ -107,7 +115,9 @@ function Page1({
   };
 
   const handleBegin = async () => {
-    if (!domain) {
+    const effectiveDomain = isTechnical ? domain : (interviewType || 'General');
+
+    if (isTechnical && !effectiveDomain) {
       setError('Domain is required');
       return;
     }
@@ -123,13 +133,29 @@ Company Focus: ${selectedCompany}
 Seniority Level: ${selectedLevel}`.trim();
 
     try {
-      const role = domain || interviewType || '';
-      const resp = await fetch(`${API_BASE}/generate_questions`, {
+      const role = effectiveDomain || interviewType || '';
+      const typeLower = (interviewType || 'Technical').toLowerCase();
+
+      let endpoint = '/generate_questions';
+      let baseUrl = API_BASE_TECH; // default: technical on main.py
+
+      if (typeLower === 'hr') {
+        endpoint = '/generate_questions_hr';
+        baseUrl = API_BASE_MODES;
+      } else if (typeLower === 'behavioral') {
+        endpoint = '/generate_questions_behavioral';
+        baseUrl = API_BASE_MODES;
+      } else if (typeLower === 'coding') {
+        endpoint = '/generate_questions_coding';
+        baseUrl = API_BASE_MODES;
+      }
+
+      const resp = await fetch(`${baseUrl}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: candidateName || 'there',
-          domain,
+          domain: effectiveDomain,
           role,
           job_description: mergedJD,
           n_questions: 5,
@@ -208,13 +234,26 @@ Seniority Level: ${selectedLevel}`.trim();
               <div className="step-body">
                 {currentStep === 0 && (
                   <div className="domain-selection">
-                    <div className="domain-grid">
-                      {domains.map((opt) => (
-                        <motion.button key={opt} className={`domain-card ${domain === opt ? 'selected' : ''}`} onClick={() => { setDomain(opt); setError(''); }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                          {opt}
-                        </motion.button>
-                      ))}
-                    </div>
+                    {isTechnical ? (
+                      <div className="domain-grid">
+                        {domains.map((opt) => (
+                          <motion.button
+                            key={opt}
+                            className={`domain-card ${domain === opt ? 'selected' : ''}`}
+                            onClick={() => { setDomain(opt); setError(''); }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            {opt}
+                          </motion.button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{ textAlign: 'center', color: '#64748B' }}>
+                        For {interviewType || 'this'} interviews you don&apos;t need a specific domain.
+                        Just click <strong>Next</strong> to continue.
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -267,7 +306,7 @@ Seniority Level: ${selectedLevel}`.trim();
 
               <div className="step-navigation">
                 {currentStep > 0 && (<button onClick={handleBack} className="nav-button secondary">← Back</button>)}
-                <button onClick={handleNext} className="nav-button primary" disabled={(currentStep === 0 && !domain) || (currentStep === 1 && isParsing)}>
+                <button onClick={handleNext} className="nav-button primary" disabled={(currentStep === 0 && isTechnical && !domain) || (currentStep === 1 && isParsing)}>
                   {currentStep === steps.length - 1 ? 'Begin Interview 🚀' : 'Next →'}
                 </button>
               </div>
