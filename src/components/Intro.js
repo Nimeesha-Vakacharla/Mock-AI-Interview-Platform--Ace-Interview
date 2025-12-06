@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
-function Intro({ interviewType }) {
+function Intro({ interviewType, setInterviewType }) {
   const navigate = useNavigate();
 
   // Auth modal state
@@ -101,13 +101,10 @@ function Intro({ interviewType }) {
 
   const handleAuthSubmit = (e) => {
     e.preventDefault();
-    // TODO: plug in your real auth API here.
-    // For now we just close the dialog.
     setIsAuthDialogOpen(false);
   };
 
   const handleNavigation = (path) => {
-    // Show a nice transition while navigating
     const overlay = document.createElement('div');
     overlay.className = 'entry-transition-overlay';
     overlay.innerHTML = `
@@ -138,11 +135,11 @@ function Intro({ interviewType }) {
             <div className="nav-dropdown">
               <span className="nav-link dropdown-trigger">Interview Types ▼</span>
               <div className="dropdown-content">
-                <Link to="/" onClick={() => {}}>All Interviews</Link>
-                <Link to="/" onClick={() => {}}>HR Interviews</Link>
-                <Link to="/" onClick={() => {}}>Behavioral</Link>
-                <Link to="/" onClick={() => {}}>Technical</Link>
-                <Link to="/" onClick={() => {}}>Coding</Link>
+                <Link to="/" onClick={() => setInterviewType && setInterviewType('All')}>All Interviews</Link>
+                <Link to="/" onClick={() => setInterviewType && setInterviewType('HR')}>HR Interviews</Link>
+                <Link to="/" onClick={() => setInterviewType && setInterviewType('Behavioral')}>Behavioral</Link>
+                <Link to="/" onClick={() => setInterviewType && setInterviewType('Technical')}>Technical</Link>
+                <Link to="/" onClick={() => setInterviewType && setInterviewType('Coding')}>Coding</Link>
               </div>
             </div>
             <button
@@ -355,9 +352,7 @@ function Intro({ interviewType }) {
           </div>
         </section>
 
-        
-
-        {/* QUOTES SECTION (SCROLLING QUOTES) */}
+        {/* QUOTES SECTION */}
         <section className="quotes-section">
           <h2 className="section-title">Stay Motivated While You Prepare</h2>
           <div className="quotes-container">
@@ -367,7 +362,6 @@ function Intro({ interviewType }) {
                   {q}
                 </div>
               ))}
-              {/* Duplicate for seamless scroll effect */}
               {quotes.map((q, idx) => (
                 <div className="quote-card" key={`dup-${idx}`}>
                   {q}
