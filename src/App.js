@@ -50,7 +50,12 @@ function App() {
           <Routes>
             <Route
               path="/"
-              element={<Intro interviewType={interviewType} />}
+              element={
+                <Intro
+                  interviewType={interviewType}
+                  setInterviewType={setInterviewType}
+                />
+              }
             />
             <Route
               path="/start"
@@ -78,6 +83,7 @@ function App() {
                   setEvaluations={setEvaluations}
                   setTotalScore={setTotalScore}
                   interviewType={interviewType}
+                  domain={domain}
                 />
               }
             />
@@ -89,7 +95,18 @@ function App() {
         </AnimatePresence>
       </main>
       <footer>
-        <p>&copy; {new Date().getFullYear()} Ace Interview. Last updated: {new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles', hour: '2-digit', minute: '2-digit', hour12: true, month: 'long', day: 'numeric', year: 'numeric' })}</p>
+        <p>
+          &copy; {new Date().getFullYear()} Ace Interview. Last updated:{' '}
+          {new Date().toLocaleString('en-US', {
+            timeZone: 'America/Los_Angeles',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
+          })}
+        </p>
       </footer>
     </Router>
   );
