@@ -3,10 +3,15 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaSpinner } from 'react-icons/fa';
 
-const API_BASE =
-  (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE) ||
-  (typeof window !== 'undefined' && window.__API_BASE__) ||
+const API_BASE_TECH =
+  (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE_TECH) ||
+  (typeof window !== 'undefined' && window.__API_BASE_TECH__) ||
   'https://sindhupandrangi-mock-interview-backend.hf.space';
+
+const API_BASE_MODES =
+  (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE_MODES) ||
+  (typeof window !== 'undefined' && window.__API_BASE_MODES__) ||
+  'https://sindhupandrangi-mock-interview-backend-modes.hf.space';
 
 function Page2({
   questions,
@@ -30,6 +35,9 @@ function Page2({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
+  const selectedType = (interviewType || 'Technical').toLowerCase();
+  const isTechnical = selectedType === 'technical' || selectedType === 'all';
+
   // Load resume token + name from storage
   useEffect(() => {
     try {
@@ -50,10 +58,13 @@ function Page2({
   // If Page2 is opened directly, fetch questions here
   useEffect(() => {
     const needToFetch = !questions || questions.length === 0;
-    const usedDomain = (domain && domain.trim()) || (interviewType && interviewType.trim()) || '';
+
+    const usedDomain = isTechnical
+      ? ((domain && domain.trim()) || '')
+      : ((interviewType && interviewType.trim()) || 'General');
 
     if (!needToFetch) return;
-    if (!usedDomain) {
+    if (isTechnical && !usedDomain) {
       setError('No domain provided. Please go back and select your domain.');
       return;
     }
@@ -67,7 +78,20 @@ function Page2({
         setIsLoadingQuestions(true);
         setError('');
 
-        const resp = await fetch(`${API_BASE}/generate_questions`, {
+        let endpoint = '/generate_questions';
+        let baseUrl = API_BASE_TECH;
+        if (selectedType === 'hr') {
+          endpoint = '/generate_questions_hr';
+          baseUrl = API_BASE_MODES;
+        } else if (selectedType === 'behavioral') {
+          endpoint = '/generate_questions_behavioral';
+          baseUrl = API_BASE_MODES;
+        } else if (selectedType === 'coding') {
+          endpoint = '/generate_questions_coding';
+          baseUrl = API_BASE_MODES;
+        }
+
+        const resp = await fetch(`${baseUrl}${endpoint}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -124,12 +148,11 @@ function Page2({
     setIsSubmitting(true);
 
     try {
-      // removed unused `usedDomain` here – it was causing the ESLint warning
-
       const newAnswers = { ...(answers || {}), [currentQuestion]: answer };
       setAnswers(newAnswers);
 
-      const resp = await fetch(`${API_BASE}/evaluate_answer`, {
+      // evaluation always via technical backend (main.py)
+      const resp = await fetch(`${API_BASE_TECH}/evaluate_answer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -304,7 +327,6 @@ function Page2({
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.5 }}
       >
-        {/* This is the line you asked for */}
         <h1>
           {candidateName
             ? `${candidateName}, get ready for your interview!`
